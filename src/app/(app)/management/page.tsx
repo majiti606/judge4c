@@ -75,7 +75,6 @@ export default function ManagementDefaultPage() {
               </BreadcrumbList>
             </Breadcrumb>
           </header>
-
           {/* 主体内容：根据 isCollapsed 切换样式 */}
           <main
             className={`flex-1 p-6 bg-background transition-all duration-300 ${

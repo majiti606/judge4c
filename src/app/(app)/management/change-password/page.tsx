@@ -1,5 +1,8 @@
-"use client"
+// src/app/(app)/management/change-password/page.tsx
+"use client";
+
 import { useState } from "react";
+import { changePassword } from "@/app/(app)/management/actions";
 
 export default function ChangePasswordPage() {
   const [oldPassword, setOldPassword] = useState("");
@@ -39,24 +42,16 @@ export default function ChangePasswordPage() {
       return;
     }
 
-    try {
-      const res = await fetch("/api/user", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ oldPassword, newPassword }),
-      });
+    const formData = new FormData();
+    formData.append("oldPassword", oldPassword);
+    formData.append("newPassword", newPassword);
 
-      if (res.ok) {
-        setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 3000);
-      } else {
-        alert("修改密码失败");
-      }
-    } catch (error) {
-      console.error(error);
-      alert("网络错误");
+    try {
+      await changePassword(formData);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (error: any) {
+      alert(error.message);
     }
   };
 

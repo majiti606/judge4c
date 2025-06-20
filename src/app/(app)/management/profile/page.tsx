@@ -1,66 +1,55 @@
-"use client"
-import { useEffect, useState } from "react"
+// src/app/(app)/management/profile/page.tsx
+"use client";
 
-// 定义用户数据接口
+import { useEffect, useState } from "react";
+import { getUserInfo, updateUserInfo } from "@/app/(app)/management/actions";
+
 interface User {
-  name: string
-  role: string
-  last_login: string
-  username: string
-  email: string
-  registration_date: string
-  status: string
+  name: string;
+  role: string;
+  last_login: string;
+  username: string;
+  email: string;
+  registration_date: string;
+  status: string;
 }
 
 export default function ProfilePage() {
-  // 明确指定 user 的类型为 User | null
-  const [user, setUser] = useState<User | null>(null)
-  const [isEditing, setIsEditing] = useState(false)
+  const [user, setUser] = useState<User | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/user")
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP 错误！状态码：${res.status}`)
-        }
-        return res.json()
-      })
-      .then((data) => setUser(data))
-      .catch((error) => {
-        console.error("获取用户数据失败:", error)
-        // 可以设置默认值或提示用户检查网络
-      })
-  }, [])
-
-  const handleSave = () => {
-    const updatedData = {
-      name: (document.getElementById("name") as HTMLInputElement).value,
-      username: (document.getElementById("username") as HTMLInputElement).value,
-      email: (document.getElementById("email") as HTMLInputElement).value,
+    async function fetchUser() {
+      try {
+        const data = await getUserInfo();
+        setUser(data);
+      } catch (error) {
+        console.error("获取用户信息失败:", error);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    fetch("/api/user", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(updatedData),
-    })
-      .then((res) => {
-        if (res.ok) {
-          setUser({ ...user!, ...updatedData }) // 更新本地状态
-          setIsEditing(false)
-        } else {
-          alert("更新失败，请重试。")
-        }
-      })
-      .catch((err) => {
-        console.error("保存出错:", err)
-        alert("保存时发生错误。")
-      })
-  }
+    fetchUser();
+  }, []);
 
-  if (!user) return <p>加载中...</p>
+  const handleSave = async () => {
+    const formData = new FormData();
+    formData.append("name", (document.getElementById("name") as HTMLInputElement).value);
+    formData.append("username", (document.getElementById("username") as HTMLInputElement).value);
+    formData.append("email", (document.getElementById("email") as HTMLInputElement).value);
+
+    try {
+      const updatedUser = await updateUserInfo(formData);
+      setUser(updatedUser);
+      setIsEditing(false);
+    } catch (error: any) {
+      alert(error.message);
+    }
+  };
+
+  if (loading) return <p>加载中...</p>;
 
   return (
     <div className="h-full w-full p-6">
@@ -78,14 +67,14 @@ export default function ProfilePage() {
               <input
                 id="name"
                 type="text"
-                defaultValue={user.name}
+                defaultValue={user?.name}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             ) : (
-              <h2 className="text-xl font-semibold">{user.name}</h2>
+              <h2 className="text-xl font-semibold">{user?.name}</h2>
             )}
-            <p className="text-gray-500">角色：{user.role}</p>
-            <p className="text-gray-500">最后登录时间：{user.last_login}</p>
+            <p className="text-gray-500">角色：{user?.role}</p>
+            <p className="text-gray-500">最后登录时间：{user?.last_login}</p>
           </div>
         </div>
 
@@ -98,11 +87,11 @@ export default function ProfilePage() {
               <input
                 id="username"
                 type="text"
-                defaultValue={user.username}
+                defaultValue={user?.username}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             ) : (
-              <p className="mt-1 text-lg font-medium text-gray-900">{user.username}</p>
+              <p className="mt-1 text-lg font-medium text-gray-900">{user?.username}</p>
             )}
           </div>
 
@@ -112,27 +101,27 @@ export default function ProfilePage() {
               <input
                 id="email"
                 type="email"
-                defaultValue={user.email}
+                defaultValue={user?.email}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               />
             ) : (
-              <p className="mt-1 text-lg font-medium text-gray-900">{user.email}</p>
+              <p className="mt-1 text-lg font-medium text-gray-900">{user?.email}</p>
             )}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">注册时间</label>
-            <p className="mt-1 text-lg font-medium text-gray-900">{user.registration_date}</p>
+            <p className="mt-1 text-lg font-medium text-gray-900">{user?.registration_date}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">状态</label>
             <p
               className={`mt-1 text-lg font-medium ${
-                user.status === "active" ? "text-green-600" : "text-red-600"
+                user?.status === "active" ? "text-green-600" : "text-red-600"
               }`}
             >
-              {user.status === "active" ? "已激活" : "未激活"}
+              {user?.status === "active" ? "已激活" : "未激活"}
             </p>
           </div>
         </div>
@@ -167,5 +156,5 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
